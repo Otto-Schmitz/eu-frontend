@@ -46,3 +46,24 @@ class CreateEmergencyContactRequestDto {
   final String phone;
   final int? priority;
 }
+
+class UpdateEmergencyContactRequestDto {
+  UpdateEmergencyContactRequestDto({
+    this.name,
+    this.relationship,
+    this.phone,
+    this.priority,
+  });
+
+  Map<String, dynamic> toJson() => {
+        if (name != null) 'name': name,
+        if (relationship != null) 'relationship': relationship,
+        if (phone != null) 'phone': phone,
+        if (priority != null) 'priority': priority,
+      };
+
+  final String? name;
+  final String? relationship;
+  final String? phone;
+  final int? priority;
+}

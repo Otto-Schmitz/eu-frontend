@@ -38,6 +38,39 @@ class AddressDto {
   final String? country;
 }
 
+class UpdateAddressRequestDto {
+  UpdateAddressRequestDto({
+    this.label,
+    this.isPrimary,
+    this.street,
+    this.number,
+    this.city,
+    this.state,
+    this.zip,
+    this.country,
+  });
+
+  Map<String, dynamic> toJson() => {
+        if (label != null) 'label': label,
+        if (isPrimary != null) 'isPrimary': isPrimary,
+        if (street != null) 'street': street,
+        if (number != null) 'number': number,
+        if (city != null) 'city': city,
+        if (state != null) 'state': state,
+        if (zip != null) 'zip': zip,
+        if (country != null) 'country': country,
+      };
+
+  final String? label;
+  final bool? isPrimary;
+  final String? street;
+  final String? number;
+  final String? city;
+  final String? state;
+  final String? zip;
+  final String? country;
+}
+
 class CreateAddressRequestDto {
   CreateAddressRequestDto({
     required this.label,

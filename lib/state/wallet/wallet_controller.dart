@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../utils/api_error_mapper.dart';
 import 'wallet_data.dart';
 import 'wallet_data_source.dart';
-import 'mock_wallet_data_source.dart';
+import 'real_wallet_data_source.dart';
 
 sealed class WalletState {
   const WalletState();
@@ -27,7 +28,7 @@ class WalletError extends WalletState {
 }
 
 final walletDataSourceProvider = Provider<WalletDataSource>((ref) {
-  return MockWalletDataSource();
+  return RealWalletDataSource(ref);
 });
 
 class WalletController extends Notifier<WalletState> {
@@ -46,10 +47,7 @@ class WalletController extends Notifier<WalletState> {
   }
 
   static String _friendlyMessage(Object e) {
-    final str = e.toString();
-    if (str.contains('401')) return 'Session expired. Please sign in again.';
-    if (str.contains('Connection')) return 'Unable to connect.';
-    return 'Something went wrong. Please try again.';
+    return ApiErrorMapper.fromException(e);
   }
 }
 

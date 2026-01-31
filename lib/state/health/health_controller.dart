@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/dto/allergy_dto.dart';
+import '../../utils/api_error_mapper.dart';
 import '../../data/dto/health_dto.dart';
 import '../../data/dto/medication_dto.dart';
 import '../providers.dart';
@@ -100,10 +101,7 @@ class HealthController extends Notifier<HealthState> {
   }
 
   static String _friendlyMessage(Object e) {
-    final str = e.toString();
-    if (str.contains('401')) return 'Session expired. Please sign in again.';
-    if (str.contains('Connection')) return 'Unable to connect.';
-    return 'Something went wrong. Please try again.';
+    return ApiErrorMapper.fromException(e);
   }
 }
 

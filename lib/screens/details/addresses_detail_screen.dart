@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/widgets/empty_widget.dart';
-import '../../core/widgets/error_widget.dart' as app;
-import '../../core/widgets/loading_widget.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
 import '../../data/dto/address_dto.dart';
-import '../../state/emergency/emergency_controller.dart';
+import '../../state/addresses/addresses_controller.dart';
 import '../../utils/constants.dart';
 
 const _labels = ['HOME', 'WORK', 'OTHER'];
@@ -24,17 +23,48 @@ class _AddressesDetailScreenState extends ConsumerState<AddressesDetailScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(emergencyControllerProvider.notifier).load();
+      ref.read(addressesControllerProvider.notifier).load();
     });
   }
 
   Future<void> _addAddress() async {
-    final result = await showDialog<CreateAddressRequestDto>(
+    final result = await showModalBottomSheet<CreateAddressRequestDto>(
       context: context,
-      builder: (ctx) => const _AddAddressDialog(),
+      isScrollControlled: true,
+      builder: (ctx) => _AddAddressSheet(
+        onAdd: (dto) => Navigator.pop(ctx, dto),
+        onCancel: () => Navigator.pop(ctx),
+      ),
     );
     if (result != null && mounted) {
-      await ref.read(emergencyControllerProvider.notifier).addAddress(result);
+      try {
+        await ref.read(addressesControllerProvider.notifier).addAddress(result);
+      } catch (_) {
+        // Controller sets ErrorState; screen will rebuild and show ErrorState
+      }
+    }
+  }
+
+  Future<void> _deleteAddress(AddressDto a) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove address?'),
+        content: const Text('Remove this address from your list?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && a.id != null && mounted) {
+      await ref.read(addressesControllerProvider.notifier).deleteAddress(a.id!);
     }
   }
 
@@ -52,7 +82,7 @@ class _AddressesDetailScreenState extends ConsumerState<AddressesDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(emergencyControllerProvider);
+    final state = ref.watch(addressesControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -69,21 +99,27 @@ class _AddressesDetailScreenState extends ConsumerState<AddressesDetailScreen> {
         ],
       ),
       body: switch (state) {
-        EmergencyLoading() => const LoadingWidget(),
-        EmergencyError(:final message) => app.ErrorDisplayWidget(
+        AddressesLoading() => const Center(child: CircularProgressIndicator()),
+        AddressesError(:final message) => ErrorState(
             message: message,
             onRetry: () =>
-                ref.read(emergencyControllerProvider.notifier).load(),
+                ref.read(addressesControllerProvider.notifier).load(),
           ),
-        EmergencyLoaded(addresses: final list) => list.isEmpty
-            ? const EmptyWidget(
+        AddressesLoaded(:final addresses) => addresses.isEmpty
+            ? EmptyState(
                 message: 'No addresses added.\nTap + to add one.',
+                icon: Icons.location_on_outlined,
+                action: FilledButton.icon(
+                  onPressed: _addAddress,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add address'),
+                ),
               )
             : ListView.builder(
                 padding: const EdgeInsets.all(AppSpacing.md),
-                itemCount: list.length,
+                itemCount: addresses.length,
                 itemBuilder: (_, i) {
-                  final a = list[i];
+                  final a = addresses[i];
                   return Card(
                     margin: const EdgeInsets.only(bottom: AppSpacing.sm),
                     child: ListTile(
@@ -95,24 +131,34 @@ class _AddressesDetailScreenState extends ConsumerState<AddressesDetailScreen> {
                               color: Theme.of(context).colorScheme.primary,
                             )
                           : null,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () => _deleteAddress(a),
+                      ),
                     ),
                   );
                 },
               ),
-        _ => const LoadingWidget(),
+        _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }
 }
 
-class _AddAddressDialog extends StatefulWidget {
-  const _AddAddressDialog();
+class _AddAddressSheet extends StatefulWidget {
+  const _AddAddressSheet({
+    required this.onAdd,
+    required this.onCancel,
+  });
+
+  final void Function(CreateAddressRequestDto) onAdd;
+  final VoidCallback onCancel;
 
   @override
-  State<_AddAddressDialog> createState() => _AddAddressDialogState();
+  State<_AddAddressSheet> createState() => _AddAddressSheetState();
 }
 
-class _AddAddressDialogState extends State<_AddAddressDialog> {
+class _AddAddressSheetState extends State<_AddAddressSheet> {
   final _formKey = GlobalKey<FormState>();
   String _label = 'HOME';
   bool _isPrimary = false;
@@ -134,102 +180,123 @@ class _AddAddressDialogState extends State<_AddAddressDialog> {
     super.dispose();
   }
 
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    widget.onAdd(
+      CreateAddressRequestDto(
+        label: _label,
+        isPrimary: _isPrimary,
+        street: _streetController.text.trim().isEmpty
+            ? null
+            : _streetController.text.trim(),
+        number: _numberController.text.trim().isEmpty
+            ? null
+            : _numberController.text.trim(),
+        city: _cityController.text.trim().isEmpty
+            ? null
+            : _cityController.text.trim(),
+        state: _stateController.text.trim().isEmpty
+            ? null
+            : _stateController.text.trim(),
+        zip: _zipController.text.trim().isEmpty
+            ? null
+            : _zipController.text.trim(),
+        country: _countryController.text.trim().isEmpty
+            ? null
+            : _countryController.text.trim(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add address'),
-      content: Form(
-        key: _formKey,
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SafeArea(
         child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                value: _label,
-                decoration: const InputDecoration(labelText: 'Label'),
-                items: _labels
-                    .map((l) => DropdownMenuItem(value: l, child: Text(l)))
-                    .toList(),
-                onChanged: (v) => setState(() => _label = v ?? 'HOME'),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Add address',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  DropdownButtonFormField<String>(
+                    value: _label,
+                    decoration: const InputDecoration(labelText: 'Label'),
+                    items: _labels
+                        .map((l) => DropdownMenuItem(value: l, child: Text(l)))
+                        .toList(),
+                    onChanged: (v) => setState(() => _label = v ?? 'HOME'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  CheckboxListTile(
+                    title: const Text('Primary address'),
+                    value: _isPrimary,
+                    onChanged: (v) => setState(() => _isPrimary = v ?? false),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _streetController,
+                    decoration: const InputDecoration(labelText: 'Street'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _numberController,
+                    decoration: const InputDecoration(labelText: 'Number'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _cityController,
+                    decoration: const InputDecoration(labelText: 'City'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _stateController,
+                    decoration: const InputDecoration(labelText: 'State'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _zipController,
+                    decoration: const InputDecoration(labelText: 'ZIP'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _countryController,
+                    decoration: const InputDecoration(labelText: 'Country'),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: widget.onCancel,
+                          child: const Text('Cancel'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: _submit,
+                          child: const Text('Add'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(height: AppSpacing.md),
-              CheckboxListTile(
-                title: const Text('Primary address'),
-                value: _isPrimary,
-                onChanged: (v) => setState(() => _isPrimary = v ?? false),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _streetController,
-                decoration: const InputDecoration(labelText: 'Street'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _numberController,
-                decoration: const InputDecoration(labelText: 'Number'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _cityController,
-                decoration: const InputDecoration(labelText: 'City'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _stateController,
-                decoration: const InputDecoration(labelText: 'State'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _zipController,
-                decoration: const InputDecoration(labelText: 'ZIP'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _countryController,
-                decoration: const InputDecoration(labelText: 'Country'),
-              ),
-            ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.pop(
-                context,
-                CreateAddressRequestDto(
-                  label: _label,
-                  isPrimary: _isPrimary,
-                  street: _streetController.text.trim().isEmpty
-                      ? null
-                      : _streetController.text.trim(),
-                  number: _numberController.text.trim().isEmpty
-                      ? null
-                      : _numberController.text.trim(),
-                  city: _cityController.text.trim().isEmpty
-                      ? null
-                      : _cityController.text.trim(),
-                  state: _stateController.text.trim().isEmpty
-                      ? null
-                      : _stateController.text.trim(),
-                  zip: _zipController.text.trim().isEmpty
-                      ? null
-                      : _zipController.text.trim(),
-                  country: _countryController.text.trim().isEmpty
-                      ? null
-                      : _countryController.text.trim(),
-                ),
-              );
-            }
-          },
-          child: const Text('Add'),
-        ),
-      ],
     );
   }
 }

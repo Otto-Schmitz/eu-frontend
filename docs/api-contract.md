@@ -19,13 +19,17 @@
 - POST /me/medications
 - DELETE /me/medications/{id}
 
-## Emergency
+## Emergency Contacts
 - GET /me/emergency-contacts
 - POST /me/emergency-contacts
+- PUT /me/emergency-contacts/{id}
+- DELETE /me/emergency-contacts/{id}
 
 ## Addresses
 - GET /me/addresses
 - POST /me/addresses
+- PUT /me/addresses/{id}
+- DELETE /me/addresses/{id}
 
 ## Mapping Rules
 - DTOs must mirror backend fields

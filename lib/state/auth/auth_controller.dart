@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/dto/auth_dto.dart';
+import '../../utils/api_error_mapper.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../providers.dart';
 
@@ -88,20 +89,7 @@ class AuthController extends Notifier<AuthState> {
   }
 
   static String _friendlyMessage(Object e) {
-    final str = e.toString();
-    if (str.contains('401') || str.contains('Session expired')) {
-      return 'Session expired. Please sign in again.';
-    }
-    if (str.contains('400') || str.contains('Invalid')) {
-      return 'Invalid email or password.';
-    }
-    if (str.contains('409') || str.contains('already exists')) {
-      return 'An account with this email already exists.';
-    }
-    if (str.contains('SocketException') || str.contains('Connection')) {
-      return 'Unable to connect. Please check your network.';
-    }
-    return 'Something went wrong. Please try again.';
+    return ApiErrorMapper.fromException(e);
   }
 }
 

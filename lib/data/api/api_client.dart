@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../../core/config/env.dart';
 import '../../core/storage/secure_storage.dart';
+import '../../utils/api_error_mapper.dart';
 import '../dto/error_dto.dart';
 
 /// Dio client with auth interceptors.
@@ -119,34 +120,20 @@ class ApiError implements Exception {
 
   factory ApiError.fromResponse(Response response) {
     final data = response.data;
+    String message;
     if (data is Map<String, dynamic>) {
-      return ApiError(
-        code: data['code'] as String?,
-        message: data['message'] as String? ?? _statusMessage(response.statusCode),
-        statusCode: response.statusCode,
-      );
+      final raw = data['message'] as String?;
+      message = raw != null && raw.isNotEmpty
+          ? raw
+          : ApiErrorMapper.fromStatusCode(response.statusCode);
+    } else {
+      message = ApiErrorMapper.fromStatusCode(response.statusCode);
     }
     return ApiError(
-      message: _statusMessage(response.statusCode),
+      code: data is Map<String, dynamic> ? data['code'] as String? : null,
+      message: message,
       statusCode: response.statusCode,
     );
-  }
-
-  static String _statusMessage(int? code) {
-    switch (code) {
-      case 400:
-        return 'Invalid request';
-      case 401:
-        return 'Session expired. Please sign in again.';
-      case 403:
-        return 'Access denied';
-      case 404:
-        return 'Not found';
-      case 422:
-        return 'Validation failed';
-      default:
-        return 'Something went wrong. Please try again.';
-    }
   }
 
   final String? code;

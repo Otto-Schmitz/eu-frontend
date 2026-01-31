@@ -3,9 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/widgets/empty_widget.dart';
-import '../../core/widgets/error_widget.dart' as app;
-import '../../core/widgets/loading_widget.dart';
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
 import '../../data/dto/emergency_contact_dto.dart';
 import '../../state/emergency/emergency_controller.dart';
 import '../../utils/constants.dart';
@@ -29,12 +28,20 @@ class _EmergencyContactsDetailScreenState
   }
 
   Future<void> _addContact() async {
-    final result = await showDialog<CreateEmergencyContactRequestDto>(
+    final result = await showModalBottomSheet<CreateEmergencyContactRequestDto>(
       context: context,
-      builder: (ctx) => const _AddContactDialog(),
+      isScrollControlled: true,
+      builder: (ctx) => _AddContactSheet(
+        onAdd: (dto) => Navigator.pop(ctx, dto),
+        onCancel: () => Navigator.pop(ctx),
+      ),
     );
     if (result != null && mounted) {
-      await ref.read(emergencyControllerProvider.notifier).addContact(result);
+      try {
+        await ref.read(emergencyControllerProvider.notifier).addContact(result);
+      } catch (_) {
+        // Controller sets ErrorState; screen will rebuild and show ErrorState
+      }
     }
   }
 
@@ -64,15 +71,21 @@ class _EmergencyContactsDetailScreenState
         ],
       ),
       body: switch (state) {
-        EmergencyLoading() => const LoadingWidget(),
-        EmergencyError(:final message) => app.ErrorDisplayWidget(
+        EmergencyLoading() => const Center(child: CircularProgressIndicator()),
+        EmergencyError(:final message) => ErrorState(
             message: message,
             onRetry: () =>
                 ref.read(emergencyControllerProvider.notifier).load(),
           ),
         EmergencyLoaded(contacts: final list) => list.isEmpty
-            ? const EmptyWidget(
+            ? EmptyState(
                 message: 'No emergency contacts.\nTap + to add one.',
+                icon: Icons.contact_emergency_outlined,
+                action: FilledButton.icon(
+                  onPressed: _addContact,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add contact'),
+                ),
               )
             : ListView.builder(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -98,20 +111,26 @@ class _EmergencyContactsDetailScreenState
                   );
                 },
               ),
-        _ => const LoadingWidget(),
+        _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }
 }
 
-class _AddContactDialog extends StatefulWidget {
-  const _AddContactDialog();
+class _AddContactSheet extends StatefulWidget {
+  const _AddContactSheet({
+    required this.onAdd,
+    required this.onCancel,
+  });
+
+  final void Function(CreateEmergencyContactRequestDto) onAdd;
+  final VoidCallback onCancel;
 
   @override
-  State<_AddContactDialog> createState() => _AddContactDialogState();
+  State<_AddContactSheet> createState() => _AddContactSheetState();
 }
 
-class _AddContactDialogState extends State<_AddContactDialog> {
+class _AddContactSheetState extends State<_AddContactSheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _relationshipController = TextEditingController();
@@ -125,62 +144,82 @@ class _AddContactDialogState extends State<_AddContactDialog> {
     super.dispose();
   }
 
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    widget.onAdd(
+      CreateEmergencyContactRequestDto(
+        name: _nameController.text.trim(),
+        relationship: _relationshipController.text.trim().isEmpty
+            ? null
+            : _relationshipController.text.trim(),
+        phone: _phoneController.text.trim(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add emergency contact'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Name is required' : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _relationshipController,
-                decoration: const InputDecoration(labelText: 'Relationship (optional)'),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: 'Phone'),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Phone is required' : null,
-              ),
-            ],
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Add emergency contact',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Name is required' : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _relationshipController,
+                  decoration: const InputDecoration(
+                      labelText: 'Relationship (optional)'),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: 'Phone'),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Phone is required' : null,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: widget.onCancel,
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _submit,
+                        child: const Text('Add'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.pop(
-                context,
-                CreateEmergencyContactRequestDto(
-                  name: _nameController.text.trim(),
-                  relationship: _relationshipController.text.trim().isEmpty
-                      ? null
-                      : _relationshipController.text.trim(),
-                  phone: _phoneController.text.trim(),
-                ),
-              );
-            }
-          },
-          child: const Text('Add'),
-        ),
-      ],
     );
   }
 }

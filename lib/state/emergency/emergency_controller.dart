@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/dto/address_dto.dart';
 import '../../data/dto/emergency_contact_dto.dart';
+import '../../utils/api_error_mapper.dart';
 import '../providers.dart';
 
 sealed class EmergencyState {
@@ -17,12 +17,8 @@ class EmergencyLoading extends EmergencyState {
 }
 
 class EmergencyLoaded extends EmergencyState {
-  const EmergencyLoaded({
-    required this.contacts,
-    required this.addresses,
-  });
+  const EmergencyLoaded(this.contacts);
   final List<EmergencyContactDto> contacts;
-  final List<AddressDto> addresses;
 }
 
 class EmergencyError extends EmergencyState {
@@ -39,10 +35,9 @@ class EmergencyController extends Notifier<EmergencyState> {
     try {
       final repo = ref.read(emergencyRepositoryProvider);
       final contacts = await repo.getEmergencyContacts();
-      final addresses = await repo.getAddresses();
-      state = EmergencyLoaded(contacts: contacts, addresses: addresses);
+      state = EmergencyLoaded(contacts);
     } catch (e) {
-      state = EmergencyError(_friendlyMessage(e));
+      state = EmergencyError(ApiErrorMapper.fromException(e));
     }
   }
 
@@ -50,25 +45,20 @@ class EmergencyController extends Notifier<EmergencyState> {
     try {
       await ref.read(emergencyRepositoryProvider).createEmergencyContact(request);
       await load();
-    } catch (_) {
+    } catch (e) {
+      state = EmergencyError(ApiErrorMapper.fromException(e));
       rethrow;
     }
   }
 
-  Future<void> addAddress(CreateAddressRequestDto request) async {
+  Future<void> deleteContact(String id) async {
     try {
-      await ref.read(emergencyRepositoryProvider).createAddress(request);
+      await ref.read(emergencyRepositoryProvider).deleteEmergencyContact(id);
       await load();
-    } catch (_) {
+    } catch (e) {
+      state = EmergencyError(ApiErrorMapper.fromException(e));
       rethrow;
     }
-  }
-
-  static String _friendlyMessage(Object e) {
-    final str = e.toString();
-    if (str.contains('401')) return 'Session expired. Please sign in again.';
-    if (str.contains('Connection')) return 'Unable to connect.';
-    return 'Something went wrong. Please try again.';
   }
 }
 

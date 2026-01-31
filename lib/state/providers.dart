@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/storage/onboarding_storage.dart';
 import '../core/storage/secure_storage.dart';
 import '../data/api/api_client.dart';
+import '../data/repositories/address_repository.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/emergency_repository.dart';
 import '../data/repositories/health_repository.dart';
@@ -40,4 +41,8 @@ final healthRepositoryProvider = Provider<HealthRepository>((ref) {
 
 final emergencyRepositoryProvider = Provider<EmergencyRepository>((ref) {
   return EmergencyRepository(apiClient: ref.watch(apiClientProvider));
+});
+
+final addressRepositoryProvider = Provider<AddressRepository>((ref) {
+  return AddressRepository(apiClient: ref.watch(apiClientProvider));
 });

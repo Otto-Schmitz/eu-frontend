@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/dto/profile_dto.dart';
+import '../../utils/api_error_mapper.dart';
 import '../providers.dart';
 
 sealed class ProfileState {
@@ -53,10 +54,7 @@ class ProfileController extends Notifier<ProfileState> {
   }
 
   static String _friendlyMessage(Object e) {
-    final str = e.toString();
-    if (str.contains('401')) return 'Session expired. Please sign in again.';
-    if (str.contains('Connection')) return 'Unable to connect.';
-    return 'Something went wrong. Please try again.';
+    return ApiErrorMapper.fromException(e);
   }
 }
 

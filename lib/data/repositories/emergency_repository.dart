@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 
 import '../api/api_client.dart';
-import '../dto/address_dto.dart';
 import '../dto/emergency_contact_dto.dart';
 
 class EmergencyRepository {
@@ -29,21 +28,20 @@ class EmergencyRepository {
     );
   }
 
-  Future<List<AddressDto>> getAddresses() async {
-    final response = await _dio.get('me/addresses');
-    final list = response.data as List<dynamic>? ?? [];
-    return list
-        .map((e) => AddressDto.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-
-  Future<AddressDto> createAddress(CreateAddressRequestDto request) async {
-    final response = await _dio.post(
-      'me/addresses',
+  Future<EmergencyContactDto> updateEmergencyContact(
+    String id,
+    UpdateEmergencyContactRequestDto request,
+  ) async {
+    final response = await _dio.put(
+      'me/emergency-contacts/$id',
       data: request.toJson(),
     );
-    return AddressDto.fromJson(
+    return EmergencyContactDto.fromJson(
       response.data as Map<String, dynamic>,
     );
+  }
+
+  Future<void> deleteEmergencyContact(String id) async {
+    await _dio.delete('me/emergency-contacts/$id');
   }
 }
