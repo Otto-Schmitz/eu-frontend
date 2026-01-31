@@ -14,3 +14,4 @@ export 'quick_card.dart';
 export 'error_banner.dart';
 export 'pressable_card.dart';
 export 'wallet_category_card.dart';
+export 'detail_form_scaffold.dart';

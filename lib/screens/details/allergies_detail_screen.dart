@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/widgets/empty_widget.dart';
-import '../../core/widgets/error_widget.dart' as app;
+import '../../core/widgets/empty_state.dart';
+import '../../core/widgets/error_state.dart';
 import '../../core/widgets/loading_widget.dart';
 import '../../data/dto/allergy_dto.dart';
 import '../../state/health/health_controller.dart';
@@ -11,6 +11,7 @@ import '../../utils/constants.dart';
 
 const _severities = ['LOW', 'MEDIUM', 'HIGH'];
 
+/// Allergies: add/delete. Bottom sheet for add flow.
 class AllergiesDetailScreen extends ConsumerStatefulWidget {
   const AllergiesDetailScreen({super.key});
 
@@ -29,12 +30,39 @@ class _AllergiesDetailScreenState extends ConsumerState<AllergiesDetailScreen> {
   }
 
   Future<void> _addAllergy() async {
-    final result = await showDialog<CreateAllergyRequestDto>(
+    final result = await showModalBottomSheet<CreateAllergyRequestDto>(
       context: context,
-      builder: (ctx) => const _AddAllergyDialog(),
+      isScrollControlled: true,
+      builder: (ctx) => _AddAllergySheet(
+        onAdd: (dto) => Navigator.pop(ctx, dto),
+        onCancel: () => Navigator.pop(ctx),
+      ),
     );
     if (result != null && mounted) {
       await ref.read(healthControllerProvider.notifier).addAllergy(result);
+    }
+  }
+
+  Future<void> _deleteAllergy(AllergyListItemDto a) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove allergy?'),
+        content: Text('Remove ${a.name} from your list?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+    if (ok == true && a.id != null && mounted) {
+      await ref.read(healthControllerProvider.notifier).removeAllergy(a.id!);
     }
   }
 
@@ -57,14 +85,20 @@ class _AllergiesDetailScreenState extends ConsumerState<AllergiesDetailScreen> {
         ],
       ),
       body: switch (state) {
-        HealthLoading() => const LoadingWidget(),
-        HealthError(:final message) => app.ErrorDisplayWidget(
+        HealthLoading() => const Center(child: CircularProgressIndicator()),
+        HealthError(:final message) => ErrorState(
             message: message,
             onRetry: () => ref.read(healthControllerProvider.notifier).load(),
           ),
         HealthLoaded(health: _, allergies: final list) => list.isEmpty
-            ? const EmptyWidget(
+            ? EmptyState(
                 message: 'No allergies added.\nTap + to add one.',
+                icon: Icons.warning_amber_outlined,
+                action: FilledButton.icon(
+                  onPressed: _addAllergy,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add allergy'),
+                ),
               )
             : ListView.builder(
                 padding: const EdgeInsets.all(AppSpacing.md),
@@ -80,52 +114,32 @@ class _AllergiesDetailScreenState extends ConsumerState<AllergiesDetailScreen> {
                           : null,
                       trailing: IconButton(
                         icon: const Icon(Icons.delete_outline),
-                        onPressed: () async {
-                          final ok = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Remove allergy?'),
-                              content: Text(
-                                  'Remove ${a.name} from your list?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                FilledButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Remove'),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (ok == true &&
-                              a.id != null &&
-                              mounted) {
-                            await ref
-                                .read(healthControllerProvider.notifier)
-                                .removeAllergy(a.id!);
-                          }
-                        },
+                        onPressed: () => _deleteAllergy(a),
                       ),
                     ),
                   );
                 },
               ),
-        _ => const LoadingWidget(),
+        _ => const Center(child: CircularProgressIndicator()),
       },
     );
   }
 }
 
-class _AddAllergyDialog extends StatefulWidget {
-  const _AddAllergyDialog();
+class _AddAllergySheet extends StatefulWidget {
+  const _AddAllergySheet({
+    required this.onAdd,
+    required this.onCancel,
+  });
+
+  final void Function(CreateAllergyRequestDto) onAdd;
+  final VoidCallback onCancel;
 
   @override
-  State<_AddAllergyDialog> createState() => _AddAllergyDialogState();
+  State<_AddAllergySheet> createState() => _AddAllergySheetState();
 }
 
-class _AddAllergyDialogState extends State<_AddAllergyDialog> {
+class _AddAllergySheetState extends State<_AddAllergySheet> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _notesController = TextEditingController();
@@ -138,64 +152,90 @@ class _AddAllergyDialogState extends State<_AddAllergyDialog> {
     super.dispose();
   }
 
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    widget.onAdd(
+      CreateAllergyRequestDto(
+        name: _nameController.text.trim(),
+        severity: _severity,
+        notes: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Add allergy'),
-      content: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Name is required' : null,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              DropdownButtonFormField<String>(
-                value: _severity,
-                decoration: const InputDecoration(labelText: 'Severity (optional)'),
-                items: _severities
-                    .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                    .toList(),
-                onChanged: (v) => setState(() => _severity = v),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextFormField(
-                controller: _notesController,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: 'Notes (optional)'),
-              ),
-            ],
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'Add allergy',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Name',
+                    hintText: 'e.g. Penicillin',
+                  ),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Name is required' : null,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                DropdownButtonFormField<String>(
+                  value: _severity,
+                  decoration: const InputDecoration(
+                    labelText: 'Severity (optional)',
+                  ),
+                  items: _severities
+                      .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                      .toList(),
+                  onChanged: (v) => setState(() => _severity = v),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextFormField(
+                  controller: _notesController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Notes (optional)',
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: widget.onCancel,
+                        child: const Text('Cancel'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _submit,
+                        child: const Text('Add'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () {
-            if (_formKey.currentState!.validate()) {
-              Navigator.pop(
-                context,
-                CreateAllergyRequestDto(
-                  name: _nameController.text.trim(),
-                  severity: _severity,
-                  notes: _notesController.text.trim().isEmpty
-                      ? null
-                      : _notesController.text.trim(),
-                ),
-              );
-            }
-          },
-          child: const Text('Add'),
-        ),
-      ],
     );
   }
 }

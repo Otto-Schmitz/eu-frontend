@@ -50,6 +50,14 @@ class MockWalletDataSource implements WalletDataSource {
           lastUpdated: now.subtract(const Duration(days: 3)),
         ),
         WalletCategory(
+          id: 'medications',
+          title: 'Medications',
+          icon: Icons.medication_outlined,
+          route: '/details/medications',
+          completionLabel: '1 medication',
+          lastUpdated: now.subtract(const Duration(hours: 5)),
+        ),
+        WalletCategory(
           id: 'documents',
           title: 'Documents',
           icon: Icons.description_outlined,

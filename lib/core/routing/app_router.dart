@@ -18,6 +18,7 @@ import '../../screens/details/emergency_contacts_detail_screen.dart';
 import '../../screens/details/profile_detail_screen.dart';
 import '../../screens/details/addresses_detail_screen.dart';
 import '../../screens/details/documents_placeholder_screen.dart';
+import '../../screens/details/medications_detail_screen.dart';
 import '../../core/widgets/navigation_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -80,6 +81,10 @@ GoRouter createAppRouter(WidgetRef ref) {
       GoRoute(
         path: '/details/allergies',
         builder: (_, __) => const AllergiesDetailScreen(),
+      ),
+      GoRoute(
+        path: '/details/medications',
+        builder: (_, __) => const MedicationsDetailScreen(),
       ),
       GoRoute(
         path: '/details/emergency-contacts',
