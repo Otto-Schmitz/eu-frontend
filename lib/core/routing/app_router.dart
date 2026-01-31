@@ -15,6 +15,9 @@ import '../../screens/shell/profile_tab_screen.dart';
 import '../../screens/details/health_detail_screen.dart';
 import '../../screens/details/allergies_detail_screen.dart';
 import '../../screens/details/emergency_contacts_detail_screen.dart';
+import '../../screens/details/profile_detail_screen.dart';
+import '../../screens/details/addresses_detail_screen.dart';
+import '../../screens/details/documents_placeholder_screen.dart';
 import '../../core/widgets/navigation_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -81,6 +84,18 @@ GoRouter createAppRouter(WidgetRef ref) {
       GoRoute(
         path: '/details/emergency-contacts',
         builder: (_, __) => const EmergencyContactsDetailScreen(),
+      ),
+      GoRoute(
+        path: '/details/profile',
+        builder: (_, __) => const ProfileDetailScreen(),
+      ),
+      GoRoute(
+        path: '/details/addresses',
+        builder: (_, __) => const AddressesDetailScreen(),
+      ),
+      GoRoute(
+        path: '/details/documents',
+        builder: (_, __) => const DocumentsPlaceholderScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
