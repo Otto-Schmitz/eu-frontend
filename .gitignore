@@ -1,0 +1,20 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+
+# IDE
+.idea/
+*.iml
+
+# Platform
+*.jks
+*.keystore
+**/android/**/gradle-wrapper.jar
+
+# Environment
+.env
+.env.*
