@@ -45,12 +45,18 @@ class _AuthInterceptor extends Interceptor {
     handler.next(options);
   }
 
+  static const _keyRetried = 'auth_retried';
+
   @override
   void onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
     if (err.response?.statusCode != 401 || _isAuthPath(err.requestOptions.path)) {
+      return handler.next(err);
+    }
+    // Retry only once to avoid infinite loop
+    if (err.requestOptions.extra[_keyRetried] == true) {
       return handler.next(err);
     }
     final refreshToken = await _storage.getRefreshToken();
@@ -73,6 +79,7 @@ class _AuthInterceptor extends Interceptor {
         await _storage.saveTokens(accessToken: access, refreshToken: refresh);
         final opts = err.requestOptions;
         opts.headers['Authorization'] = 'Bearer $access';
+        opts.extra[_keyRetried] = true;
         final retry = await _dio.fetch(opts);
         return handler.resolve(retry);
       }

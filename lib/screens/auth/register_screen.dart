@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/widgets/error_widget.dart' as app;
+import '../../core/widgets/primary_button.dart';
+import '../../core/widgets/error_state.dart';
+import '../../core/widgets/field.dart';
 import '../../data/dto/auth_dto.dart';
 import '../../state/auth/auth_controller.dart';
 import '../../utils/constants.dart';
@@ -63,22 +65,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: AppSpacing.lg),
-                TextFormField(
+                Field(
                   controller: _nameController,
+                  label: 'Full name (optional)',
                   textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: 'Full name (optional)',
-                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                TextFormField(
+                Field(
                   controller: _emailController,
+                  label: 'Email',
+                  hint: 'you@example.com',
                   keyboardType: TextInputType.emailAddress,
-                  autocorrect: false,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    hintText: 'you@example.com',
-                  ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Email is required';
                     if (!v.contains('@')) return 'Invalid email';
@@ -86,21 +83,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: AppSpacing.md),
-                TextFormField(
+                Field(
                   controller: _passwordController,
+                  label: 'Password',
+                  hint: 'At least 8 characters',
                   obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'At least 8 characters',
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility
-                            : Icons.visibility_off,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Password is required';
@@ -110,22 +105,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
                 if (auth is AuthError) ...[
                   const SizedBox(height: AppSpacing.md),
-                  app.ErrorDisplayWidget(
+                  ErrorState(
                     message: auth.message,
                     onRetry: () =>
                         ref.read(authControllerProvider.notifier).clearError(),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.xl),
-                FilledButton(
-                  onPressed: auth is AuthLoading ? null : _submit,
-                  child: auth is AuthLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Create account'),
+                PrimaryButton(
+                  label: 'Create account',
+                  onPressed: _submit,
+                  loading: auth is AuthLoading,
                 ),
                 const SizedBox(height: AppSpacing.md),
                 TextButton(

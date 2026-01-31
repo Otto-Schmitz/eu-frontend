@@ -10,10 +10,9 @@ Calm, minimal Flutter app (Android + iOS) for storing and quickly accessing heal
    flutter pub get
    flutter create . --project-name eu   # adds android/ios if missing
    ```
-3. Set API base URL (default: `http://localhost:8080`):
-   ```bash
-   flutter run --dart-define=API_BASE_URL=http://your-api:8080
-   ```
+3. Set API base URL:
+   - Edit `lib/core/config/config.dart` → `defaultApiBaseUrl` (dummy/local)
+   - Or: `flutter run --dart-define=API_BASE_URL=http://your-api:8080`
 
 ## Run
 
@@ -26,6 +25,12 @@ flutter run -d ios
 
 # With custom API URL
 flutter run --dart-define=API_BASE_URL=https://api.example.com
+```
+
+**Acompanhar ao vivo (enquanto prompts/IA editam o código):** rode o app num terminal e deixe aberto. Quando os arquivos forem salvos, no mesmo terminal pressione **`r`** (hot reload) ou **`R`** (hot restart) para ver as mudanças. Ou use o script:
+
+```bash
+./run_dev.sh
 ```
 
 ## Structure

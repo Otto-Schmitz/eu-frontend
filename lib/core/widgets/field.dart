@@ -20,6 +20,7 @@ class Field extends StatelessWidget {
     this.onChanged,
     this.onTap,
     this.autofillHints,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   final TextEditingController? controller;
@@ -36,6 +37,7 @@ class Field extends StatelessWidget {
   final void Function(String)? onChanged;
   final VoidCallback? onTap;
   final Iterable<String>? autofillHints;
+  final TextCapitalization textCapitalization;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +56,7 @@ class Field extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           textInputAction: textInputAction,
+          textCapitalization: textCapitalization,
           readOnly: readOnly,
           maxLines: maxLines,
           validator: validator,

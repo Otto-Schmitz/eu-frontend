@@ -1,10 +1,17 @@
-/// App configuration. Use --dart-define=API_BASE_URL=... for production.
+/// API configuration.
+///
+/// Override via: flutter run --dart-define=API_BASE_URL=https://api.example.com
+/// Or edit [defaultApiBaseUrl] in config.dart for local development.
+library;
+
+import 'config.dart';
+
 class Env {
   Env._();
 
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://localhost:8080',
+    defaultValue: Config.defaultApiBaseUrl,
   );
 
   static const String apiPath = '/api/v1';
