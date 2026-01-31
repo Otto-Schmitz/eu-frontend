@@ -107,6 +107,37 @@ class SkeletonCard extends StatelessWidget {
   }
 }
 
+/// Home screen skeleton: greeting + 3 card placeholders.
+class HomeSkeleton extends StatelessWidget {
+  const HomeSkeleton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      children: [
+        LoadingSkeleton(
+          width: 180,
+          height: 28,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        LoadingSkeleton(
+          width: 120,
+          height: 16,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        const SkeletonCard(),
+        const SizedBox(height: AppSpacing.sm),
+        const SkeletonCard(),
+        const SizedBox(height: AppSpacing.sm),
+        const SkeletonCard(),
+      ],
+    );
+  }
+}
+
 /// Full-screen loading with skeleton cards.
 class LoadingSkeletonScreen extends StatelessWidget {
   const LoadingSkeletonScreen({
