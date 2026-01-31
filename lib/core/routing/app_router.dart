@@ -19,6 +19,7 @@ import '../../screens/details/profile_detail_screen.dart';
 import '../../screens/details/addresses_detail_screen.dart';
 import '../../screens/details/documents_placeholder_screen.dart';
 import '../../screens/details/medications_detail_screen.dart';
+import '../../screens/settings/settings_screen.dart';
 import '../../core/widgets/navigation_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -76,31 +77,67 @@ GoRouter createAppRouter(WidgetRef ref) {
       ),
       GoRoute(
         path: '/details/health',
-        builder: (_, __) => const HealthDetailScreen(),
+        pageBuilder: (c, s) => _buildPageWithTransition(
+          c,
+          s,
+          const HealthDetailScreen(),
+        ),
       ),
       GoRoute(
         path: '/details/allergies',
-        builder: (_, __) => const AllergiesDetailScreen(),
+        pageBuilder: (c, s) => _buildPageWithTransition(
+          c,
+          s,
+          const AllergiesDetailScreen(),
+        ),
       ),
       GoRoute(
         path: '/details/medications',
-        builder: (_, __) => const MedicationsDetailScreen(),
+        pageBuilder: (c, s) => _buildPageWithTransition(
+          c,
+          s,
+          const MedicationsDetailScreen(),
+        ),
       ),
       GoRoute(
         path: '/details/emergency-contacts',
-        builder: (_, __) => const EmergencyContactsDetailScreen(),
+        pageBuilder: (c, s) => _buildPageWithTransition(
+          c,
+          s,
+          const EmergencyContactsDetailScreen(),
+        ),
       ),
       GoRoute(
         path: '/details/profile',
-        builder: (_, __) => const ProfileDetailScreen(),
+        pageBuilder: (c, s) => _buildPageWithTransition(
+          c,
+          s,
+          const ProfileDetailScreen(),
+        ),
       ),
       GoRoute(
         path: '/details/addresses',
-        builder: (_, __) => const AddressesDetailScreen(),
+        pageBuilder: (c, s) => _buildPageWithTransition(
+          c,
+          s,
+          const AddressesDetailScreen(),
+        ),
       ),
       GoRoute(
         path: '/details/documents',
-        builder: (_, __) => const DocumentsPlaceholderScreen(),
+        pageBuilder: (c, s) => _buildPageWithTransition(
+          c,
+          s,
+          const DocumentsPlaceholderScreen(),
+        ),
+      ),
+      GoRoute(
+        path: '/settings',
+        pageBuilder: (c, s) => _buildPageWithTransition(
+          c,
+          s,
+          const SettingsScreen(),
+        ),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -150,6 +187,33 @@ GoRouter createAppRouter(WidgetRef ref) {
         ],
       ),
     ],
+  );
+}
+
+/// Shared-axis style transition: subtle slide + fade.
+CustomTransitionPage<void> _buildPageWithTransition(
+  BuildContext context,
+  GoRouterState state,
+  Widget child,
+) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      const begin = Offset(0.02, 0);
+      const end = Offset.zero;
+      const curve = Curves.easeInOutCubic;
+      final tween = Tween(begin: begin, end: end).chain(
+        CurveTween(curve: curve),
+      );
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: FadeTransition(
+          opacity: animation,
+          child: child,
+        ),
+      );
+    },
   );
 }
 

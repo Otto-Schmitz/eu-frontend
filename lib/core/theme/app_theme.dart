@@ -163,6 +163,7 @@ class AppTheme {
         fontSize: AppTypography.displayLarge,
         fontWeight: FontWeight.w400,
         letterSpacing: AppTypography.letterSpacingTight,
+        height: 1.12,
         color: defaultColor,
       ),
       displayMedium: TextStyle(
@@ -180,22 +181,26 @@ class AppTheme {
         fontSize: AppTypography.headlineLarge,
         fontWeight: FontWeight.w600,
         letterSpacing: AppTypography.letterSpacingTight,
+        height: 1.2,
         color: defaultColor,
       ),
       headlineMedium: TextStyle(
         fontSize: AppTypography.headlineMedium,
         fontWeight: FontWeight.w600,
         letterSpacing: AppTypography.letterSpacingTight,
+        height: 1.25,
         color: defaultColor,
       ),
       headlineSmall: TextStyle(
         fontSize: AppTypography.headlineSmall,
         fontWeight: FontWeight.w600,
+        height: 1.3,
         color: defaultColor,
       ),
       titleLarge: TextStyle(
         fontSize: AppTypography.titleLarge,
         fontWeight: FontWeight.w600,
+        height: 1.3,
         color: defaultColor,
       ),
       titleMedium: TextStyle(
@@ -211,11 +216,13 @@ class AppTheme {
       bodyLarge: TextStyle(
         fontSize: AppTypography.bodyLarge,
         fontWeight: FontWeight.w400,
+        height: 1.5,
         color: defaultColor,
       ),
       bodyMedium: TextStyle(
         fontSize: AppTypography.bodyMedium,
         fontWeight: FontWeight.w400,
+        height: 1.43,
         color: defaultColor,
       ),
       bodySmall: TextStyle(

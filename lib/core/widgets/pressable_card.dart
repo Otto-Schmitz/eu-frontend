@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../utils/constants.dart';
+import '../../utils/haptics.dart';
 
 /// Card with press feedback (scale) and ink splash.
 class PressableCard extends StatefulWidget {
@@ -58,7 +59,12 @@ class _PressableCardState extends State<PressableCard>
         child: Card(
           clipBehavior: Clip.antiAlias,
           child: InkWell(
-            onTap: widget.onTap,
+            onTap: widget.onTap != null
+                ? () {
+                    AppHaptics.light();
+                    widget.onTap!();
+                  }
+                : null,
             borderRadius: BorderRadius.circular(AppSpacing.cornerRadius),
             child: widget.child,
           ),

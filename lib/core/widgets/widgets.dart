@@ -7,6 +7,7 @@ export 'primary_button.dart';
 export 'secondary_button.dart';
 export 'field.dart';
 export 'empty_state.dart';
+export 'tappable_icon_button.dart';
 export 'error_state.dart';
 export 'loading_skeleton.dart';
 export 'navigation_shell.dart';

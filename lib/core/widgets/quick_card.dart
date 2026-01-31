@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
 import '../../utils/constants.dart';
+import '../../utils/haptics.dart';
 
 /// Quick card: filled content or empty state with 1-tap CTA.
 class QuickCard extends StatelessWidget {
@@ -31,7 +32,10 @@ class QuickCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: hasValue ? onTap : onAddTap ?? onTap,
+        onTap: () {
+          AppHaptics.light();
+          (hasValue ? onTap : onAddTap ?? onTap)?.call();
+        },
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Row(

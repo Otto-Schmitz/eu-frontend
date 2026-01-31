@@ -92,7 +92,9 @@ class _AllergiesDetailScreenState extends ConsumerState<AllergiesDetailScreen> {
           ),
         HealthLoaded(health: _, allergies: final list) => list.isEmpty
             ? EmptyState(
-                message: 'No allergies added.\nTap + to add one.',
+                heading: 'No allergies listed',
+                message:
+                    'Add allergies so first responders know what to avoid. Tap the button below or + in the app bar.',
                 icon: Icons.warning_amber_outlined,
                 action: FilledButton.icon(
                   onPressed: _addAllergy,

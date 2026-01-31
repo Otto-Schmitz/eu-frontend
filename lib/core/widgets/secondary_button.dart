@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/haptics.dart';
+
 /// Secondary outlined button. Use for secondary actions.
 class SecondaryButton extends StatelessWidget {
   const SecondaryButton({
@@ -18,7 +20,10 @@ class SecondaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: onPressed,
+        onPressed: onPressed == null ? null : () {
+          AppHaptics.light();
+          onPressed!();
+        },
         child: icon != null
             ? Row(
                 mainAxisSize: MainAxisSize.min,

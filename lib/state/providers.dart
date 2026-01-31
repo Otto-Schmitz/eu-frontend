@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/storage/onboarding_storage.dart';
 import '../core/storage/secure_storage.dart';
+import '../core/storage/theme_storage.dart';
 import '../data/api/api_client.dart';
 import '../data/repositories/address_repository.dart';
 import '../data/repositories/auth_repository.dart';
@@ -17,6 +18,7 @@ import 'emergency/emergency_controller.dart';
 final secureStorageProvider = Provider<SecureStorage>((_) => SecureStorage());
 final onboardingStorageProvider =
     Provider<OnboardingStorage>((_) => OnboardingStorage());
+final themeStorageProvider = Provider<ThemeStorage>((_) => ThemeStorage());
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final storage = ref.watch(secureStorageProvider);

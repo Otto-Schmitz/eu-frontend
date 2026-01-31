@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/widgets/empty_state.dart';
+import '../../utils/haptics.dart';
 import '../../core/widgets/error_state.dart';
 import '../../data/dto/emergency_contact_dto.dart';
 import '../../state/emergency/emergency_controller.dart';
@@ -46,6 +47,7 @@ class _EmergencyContactsDetailScreenState
   }
 
   Future<void> _call(String phone) async {
+    AppHaptics.medium();
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
@@ -79,7 +81,9 @@ class _EmergencyContactsDetailScreenState
           ),
         EmergencyLoaded(contacts: final list) => list.isEmpty
             ? EmptyState(
-                message: 'No emergency contacts.\nTap + to add one.',
+                heading: 'No emergency contacts',
+                message:
+                    'Add someone to call in an emergency. This info appears on your Medical ID tab for quick access.',
                 icon: Icons.contact_emergency_outlined,
                 action: FilledButton.icon(
                   onPressed: _addContact,

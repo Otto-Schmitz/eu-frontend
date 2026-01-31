@@ -107,7 +107,9 @@ class _AddressesDetailScreenState extends ConsumerState<AddressesDetailScreen> {
           ),
         AddressesLoaded(:final addresses) => addresses.isEmpty
             ? EmptyState(
-                message: 'No addresses added.\nTap + to add one.',
+                heading: 'No addresses yet',
+                message:
+                    'Add home, work, or other addresses. Useful for emergencies and documents.',
                 icon: Icons.location_on_outlined,
                 action: FilledButton.icon(
                   onPressed: _addAddress,

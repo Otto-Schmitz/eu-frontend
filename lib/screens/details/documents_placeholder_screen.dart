@@ -18,8 +18,10 @@ class DocumentsPlaceholderScreen extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: const EmptyState(
-        message: 'Documents coming soon.\nStore and access important documents.',
+      body: EmptyState(
+        heading: 'Coming soon',
+        message:
+            'Store and access important documents securely. This feature is in development.',
         icon: Icons.description_outlined,
       ),
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../utils/constants.dart';
+import '../../utils/haptics.dart';
 
 /// Bottom navigation shell for Home, Wallet, Emergency, Profile.
 class NavigationShell extends StatelessWidget {
@@ -13,6 +14,7 @@ class NavigationShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   void _onTap(int index) {
+    AppHaptics.selection();
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,

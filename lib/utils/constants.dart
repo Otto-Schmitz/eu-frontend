@@ -14,7 +14,8 @@ class AppSpacing {
   static const double cornerRadius = 12;
   static const double cornerRadiusSm = 8;
   static const double cardElevation = 1;
-  static const double minTouchTarget = 44;
+  /// Min 48dp for accessibility (WCAG).
+  static const double minTouchTarget = 48;
 }
 
 /// Typography scale — Material 3 with Apple/Google readability.

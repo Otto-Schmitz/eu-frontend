@@ -53,8 +53,10 @@ class _WalletTabScreenState extends ConsumerState<WalletTabScreen> {
                   ),
                 ),
               WalletLoaded(:final data) => data.categories.isEmpty
-                  ? const EmptyState(
-                      message: 'No categories yet.',
+                  ? EmptyState(
+                      heading: 'Nothing here yet',
+                      message:
+                          'Your information wallet will show categories once data loads. Pull to refresh.',
                       icon: Icons.wallet_outlined,
                     )
                   : _WalletContent(

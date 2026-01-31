@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../utils/haptics.dart';
+
 /// Primary filled button. Use for main actions.
 class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
@@ -20,7 +22,10 @@ class PrimaryButton extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       child: FilledButton(
-        onPressed: loading ? null : onPressed,
+        onPressed: (loading || onPressed == null) ? null : () {
+          AppHaptics.medium();
+          onPressed!();
+        },
         child: loading
             ? const SizedBox(
                 height: 20,

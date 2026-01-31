@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../../utils/haptics.dart';
 import '../../data/dto/allergy_dto.dart';
 import '../../state/emergency/emergency_controller.dart';
 import '../../state/health/health_controller.dart';
@@ -29,6 +30,7 @@ class _EmergencyTabScreenState extends ConsumerState<EmergencyTabScreen> {
   }
 
   Future<void> _call(String phone) async {
+    AppHaptics.medium();
     final uri = Uri.parse('tel:$phone');
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);

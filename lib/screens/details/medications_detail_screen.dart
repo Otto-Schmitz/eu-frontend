@@ -89,7 +89,9 @@ class _MedicationsDetailScreenState extends ConsumerState<MedicationsDetailScree
           ),
         HealthLoaded(health: _, medications: final list) => list.isEmpty
             ? EmptyState(
-                message: 'No medications added.\nTap + to add one.',
+                heading: 'No medications listed',
+                message:
+                    'Add current medications to help healthcare providers. Tap the button below or + in the app bar.',
                 icon: Icons.medication_outlined,
                 action: FilledButton.icon(
                   onPressed: _addMedication,
